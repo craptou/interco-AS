@@ -30,6 +30,7 @@ services:
         ipv4_address: 120.0.16.2
       net_inter_as:
         ipv4_address: 200.0.0.2
+  
   dmz-router:
     image: debian:12
     container_name: dmz-router
@@ -53,7 +54,52 @@ services:
         ipv4_address: 120.0.31.3
       net_dmz:
         ipv4_address: 120.0.24.3
-
+  
+  ent-router:
+    image: debian:12
+    container_name: ent-router
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    command: >
+      bash -c "apt-get update &&
+      apt-get install -y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold frr frr-pythontools iproute2 iputils-ping tcpdump &&
+      sed -i 's/bgpd=no/bgpd=yes/' /etc/frr/daemons &&
+      sed -i 's/ospfd=no/ospfd=yes/' /etc/frr/daemons &&
+      /usr/lib/frr/frrinit.sh start || echo 'FRR failed to start, check logs' ;
+      tail -f /dev/null"
+    volumes:
+      - ./frr/ent_main_frr.conf:/etc/frr/frr.conf
+    networks:
+      net_core:
+        ipv4_address: 120.0.31.4
+      net_ent_main:
+        ipv4_address: 120.0.28.3
+  
+  asn-router:
+    image: debian:12
+    container_name: asn-router
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    command: >
+      bash -c "apt-get update &&
+      apt-get install -y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold frr frr-pythontools iproute2 iputils-ping tcpdump &&
+      sed -i 's=bgpd=no=bgpd=yes=' /etc/frr/daemons &&
+      sed -i 's=ospfd=no=ospfd=yes=' /etc/frr/daemons &&
+      /usr/lib/frr/frrinit.sh start || echo 'FRR failed to start, check logs' ;
+      tail -f /dev/null"
+    volumes:
+      - ./frr/asn_frr.conf:/etc/frr/frr.conf
+    networks:
+      net_inter_as:
+        ipv4_address: 200.0.0.3
 
 networks:
   net_core:
