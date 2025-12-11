@@ -79,6 +79,29 @@ services:
       net_ent_main:
         ipv4_address: 120.0.28.3
   
+  box-router:
+    image: debian:12
+    container_name: box-router
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    command: >
+      bash -c "apt-get update &&
+      apt-get install -y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold frr frr-pythontools iproute2 iputils-ping tcpdump &&
+      sed -i 's/bgpd=no/bgpd=yes/' /etc/frr/daemons &&
+      sed -i 's/ospfd=no/ospfd=yes/' /etc/frr/daemons &&
+      /usr/lib/frr/frrinit.sh start || echo 'FRR failed to start, check logs' ;
+      tail -f /dev/null"
+    volumes:
+      - ./frr/box_frr.conf:/etc/frr/frr.conf
+    networks:
+      net_box:
+        ipv4_address: 120.0.16.3
+
+  
   asn-router:
     image: debian:12
     container_name: asn-router
