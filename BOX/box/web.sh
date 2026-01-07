@@ -5,7 +5,7 @@ echo ">>> DÉMARRAGE DU SERVEUR WEB <<<"
 apt-get update
 apt-get install -y apache2 net-tools isc-dhcp-server traceroute mtr tcpdump iperf3 nftables iptables iproute2 iputils-ping procps
 
-# Création de la page (ton code HTML existant est très bien)
+# Création de la page (petit exemple de site web)
 cat > /var/www/html/index.html <<EOF
 <!DOCTYPE html>
 <html>
