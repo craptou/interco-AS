@@ -1,0 +1,84 @@
+services:
+  # ============================
+  # LA BOX (Le routeur)
+  # ============================
+  ma-box:
+    # Le conteneur utilise l'image Debian 12
+    image: debian:12
+    # Le nom du conteneur
+    container_name: ma-box
+    # On donne les privilèges nécessaires pour la gestion réseau
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    # On évite les interactions pendant l'installation des paquets
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    # On monte les fichiers nécessaires dans le conteneur
+    volumes:
+      - ./box/box.sh:/box.sh
+      - ./box/dhcpd.conf:/etc/dhcp/dhcpd.conf
+    # On exécute le script au démarrage  
+    command: bash /box.sh
+    # On connecte le conteneur aux deux réseaux
+    networks:
+      net_box:
+        # Réseau de l'Opérateur (eth0 dans le conteneur)
+        ipv4_address: 120.0.16.99
+      lan_box:
+        # Réseau LAN (eth1 dans le conteneur)
+        ipv4_address: 192.168.20.1
+
+  # ============================
+  # LE CLIENT 
+  # ============================
+  client:
+    image: debian:12
+    container_name: client
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    volumes:
+      # On monte le script client.sh
+      - ./box/client.sh:/client.sh
+    # On exécute le script au démarrage
+    command: bash /client.sh
+    networks:
+      lan_box :
+
+  # ============================
+  # LE SERVEUR WEB
+  # ============================
+  web:
+    image: debian:12
+    container_name: web
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    volumes:
+      # On monte le script web.sh
+      - ./box/web.sh:/web.sh
+    # On exécute le script
+    command: bash /web.sh
+    networks:
+      lan_box:
+
+
+networks:
+  # Le réseau LAN de la Box
+  lan_box:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.20.0/24
+  # Le réseau de l'Opérateur
+  net_box:
+    external: true
+    name: core_net_box
