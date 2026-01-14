@@ -3,7 +3,7 @@ set -e
 
 # Installation
 apt-get update
-apt-get install -y net-tools isc-dhcp-server traceroute mtr tcpdump iperf3 nftables iptables iproute2 iputils-ping procps
+apt-get install -y net-tools isc-dhcp-server traceroute mtr tcpdump iperf3 nftables iptables iproute2 iputils-ping procps openvpn
 
 # On nettoie l'IP que Docker a pu donner au démarrage
 ip addr flush dev eth0

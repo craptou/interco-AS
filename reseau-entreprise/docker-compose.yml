@@ -1,0 +1,95 @@
+services:
+  # ============================
+  # SERVEUR DHCP ENTREPRISE
+  # ============================
+  ent-dhcp:
+    build:
+      context: .
+      dockerfile: entreprise/Dockerfile.dhcp
+    container_name: ent-dhcp
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    volumes:
+      - ./entreprise/ent_dhcp.sh:/ent_dhcp.sh
+      - ./entreprise/dhcpd.conf:/etc/dhcp/dhcpd.conf
+    command: bash /ent_dhcp.sh
+    networks:
+      net_ent_main:
+        ipv4_address: 120.0.28.100
+      net_ent_secondary:
+        ipv4_address: 120.0.30.100
+
+  # ============================
+  # SERVEUR ENTREPRISE PRINCIPAL
+  # ============================
+  ent-server-main:
+    build:
+      context: .
+      dockerfile: entreprise/Dockerfile.server_main
+    container_name: ent-server-main
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    mac_address: 02:42:78:00:1c:0a
+    volumes:
+      - ./entreprise/ent_server_main.sh:/ent_server_main.sh
+    command: bash /ent_server_main.sh
+    networks:
+      net_ent_main:
+
+  # ============================
+  # SERVEUR ENTREPRISE SECONDAIRE
+  # ============================
+  ent-server-secondary:
+    build:
+      context: .
+      dockerfile: entreprise/Dockerfile.server_secondary
+    container_name: ent-server-secondary
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    mac_address: 02:42:78:00:1e:0a
+    volumes:
+      - ./entreprise/ent_server_secondary.sh:/ent_server_secondary.sh
+    command: bash /ent_server_secondary.sh
+    networks:
+      net_ent_secondary:
+
+  # ============================
+  # CLIENT ENTREPRISE
+  # ============================
+  ent-client:
+    build:
+      context: .
+      dockerfile: entreprise/Dockerfile.client
+    container_name: ent-client
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    mac_address: 02:42:78:00:1c:14
+    volumes:
+      - ./entreprise/ent_client.sh:/ent_client.sh
+    command: bash /ent_client.sh
+    networks:
+      net_ent_main:
+
+networks:
+  net_ent_main:
+    external: true
+    name: core_net_ent_main
+  net_ent_secondary:
+    external: true
+    name: core_net_ent_secondary

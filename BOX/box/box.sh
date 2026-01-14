@@ -2,7 +2,7 @@
 set -e
 
 apt-get update
-apt-get install -y net-tools isc-dhcp-server traceroute mtr tcpdump iperf3 nftables iptables iproute2 iputils-ping procps
+apt-get install -y net-tools isc-dhcp-server traceroute mtr tcpdump iperf3 nftables iptables iproute2 iputils-ping procps openvpn
 
 # Activer le routage IPv4
 echo 1 > /proc/sys/net/ipv4/ip_forward
@@ -28,7 +28,7 @@ service isc-dhcp-server start || /usr/sbin/dhcpd -4 -f -d --no-pid -cf /etc/dhcp
 # Nettoyage iptables
 iptables -F
 iptables -t nat -F
-# NAT 
+# NAT
 iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 # Bloquer toutes les requêtes sauf celles filtrées
 iptables -P INPUT DROP
