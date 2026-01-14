@@ -1,64 +1,34 @@
-# Demo checks for DMZ (commands + expected result)
+# Vérifications DMZ (commandes)
 
-# 1. Start the DMZ stack
+# Démarrer
 cd reseau-dmz
-# then:
 docker compose up -d
-# Expected: services start without errors (use `docker ps` to confirm)
 
-# 2. Check DMZ containers are running
+# Vérifier les conteneurs
 docker ps --filter "name=dmz"
-# Expected: containers `dmz-web`, `dmz-dns`, `dmz-fw` present and running
 
-# 3. Inspect DNS hosts file (on DNS container)
+# Vérifier DNS
 docker exec dmz-dns cat /etc/dnsmasq.d/hosts
-# Expected: lines showing dmz-web.dmz.local -> 120.0.24.10 etc.
-
-# 4. Confirm dnsmasq process & logs
-docker exec dmz-dns ps aux | grep dnsmasq
-docker logs dmz-dns | tail -n 50
-# Expected: dnsmasq running and logs exist (queries logged)
-
-# 5. Test DNS resolution (run dig in a temporary container on DMZ network)
-# (requires pulling instrumentisto/dig image on first use)
 docker run --rm --network=core_net_dmz instrumentisto/dig +short dmz-web.dmz.local @120.0.24.11
-# Expected: `120.0.24.10`
 
-# 6. Test HTTP from DMZ network (curl from temporary container)
+# Tester HTTP depuis DMZ
 docker run --rm --network=core_net_dmz curlimages/curl:latest curl -s http://120.0.24.10 | head -n 5
-# Expected: HTML page containing "DMZ Web Server"
 
-# 7. Test HTTP from CORE network (should be allowed)
+# Tester HTTP depuis CORE (doit fonctionner)
 docker run --rm --network=core_net_core curlimages/curl:latest curl -s --max-time 5 http://120.0.24.10 | head -n 5
-# Expected: same HTML page (connection allowed from CORE)
 
-# 8. Test HTTP from ENT network (should be blocked by firewall)
-docker run --rm --network=core_net_ent_main curlimages/curl:latest curl -s --max-time 5 http://120.0.24.10 || echo "BLOCKED (expected)"
-# Expected: timeouts or connection refused -> blocked (this demonstrates firewall policy)
+# Tester HTTP depuis ENT (doit être bloqué)
+docker run --rm --network=core_net_ent_main curlimages/curl:latest curl -s --max-time 5 http://120.0.24.10 || echo "BLOQUE (attendu)"
 
-# 9. Show FW ruleset (on firewall container)
+# Règles du pare-feu
 docker exec dmz-fw nft list ruleset
-# Expected: rules allowing core (120.0.31.0/24) -> dmz TCP dport 80 and DNS rules as configured
 
-# 10. Confirm IP forwarding is enabled (fw container)
+# Vérifier forwarding
 docker exec dmz-fw sysctl net.ipv4.ip_forward
-# Expected: net.ipv4.ip_forward = 1
 
-# 11. Ping the web server from DMZ network (basic reachability)
+# Ping depuis DMZ
 docker run --rm --network=core_net_dmz busybox ping -c 2 120.0.24.10
-# Expected: successful ICMP replies
 
-# 12. Inspect web server logs (if needed)
-docker logs dmz-web | tail -n 50
-# Expected: access logs when you curl the page
-
-# 13. Cleanup when finished
+# Nettoyage
 cd reseau-dmz
 docker compose down
-
-# Notes
-# - Use `docker compose up -d` in the `reseau-dmz` folder. The temporary curl/dig/busybox containers use the external networks
-#   `core_net_dmz`, `core_net_core`, `core_net_ent_main` that are defined/created by the `core` project. Start `core` first if needed.
-# - If a temporary container image is missing, Docker will download it (e.g., curlimages/curl, instrumentisto/dig, busybox).
-
-# End of demo checklist
