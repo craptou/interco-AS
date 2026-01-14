@@ -1,0 +1,4 @@
+FROM debian:12
+RUN apt-get update && apt-get install -y dnsmasq iproute2 iputils-ping && rm -rf /var/lib/apt/lists/*
+COPY dnsmasq.conf /etc/dnsmasq.conf
+COPY dns_hosts /etc/dnsmasq.d/hosts

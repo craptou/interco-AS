@@ -1,0 +1,4 @@
+# host records for DMZ
+120.0.24.10 dmz-web.dmz.local dmz-web
+120.0.24.11 dmz-dns.dmz.local dmz-dns
+120.0.24.5 dmz-fw.dmz.local dmz-fw

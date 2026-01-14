@@ -1,0 +1,58 @@
+services:
+  dmz-web:
+    build:
+      context: .
+      dockerfile: dmz/Dockerfile.web
+    container_name: dmz-web
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    volumes:
+      - ./dmz/dmz_web.sh:/dmz/dmz_web.sh
+    command: bash /dmz/dmz_web.sh
+    networks:
+      net_dmz:
+        ipv4_address: 120.0.24.10
+
+  dmz-dns:
+    build:
+      context: .
+      dockerfile: dmz/Dockerfile.dns
+    container_name: dmz-dns
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    volumes:
+      - ./dmz/dnsmasq.conf:/etc/dnsmasq.conf
+      - ./dmz/dns_hosts:/etc/dnsmasq.d/hosts
+    command: dnsmasq --no-daemon --conf-file=/etc/dnsmasq.conf
+    networks:
+      net_dmz:
+        ipv4_address: 120.0.24.11
+
+  dmz-fw:
+    build:
+      context: .
+      dockerfile: dmz/Dockerfile.fw
+    container_name: dmz-fw
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    volumes:
+      - ./dmz/fw_rules.sh:/dmz/fw_rules.sh
+    command: bash /dmz/fw_rules.sh
+    networks:
+      net_dmz:
+        ipv4_address: 120.0.24.5
+      net_core:
+        ipv4_address: 120.0.31.5
+
+networks:
+  net_dmz:
+    external: true
+    name: core_net_dmz
+
+  net_core:
+    external: true
+    name: core_net_core

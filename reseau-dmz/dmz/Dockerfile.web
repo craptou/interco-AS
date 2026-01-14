@@ -1,0 +1,4 @@
+FROM debian:12
+RUN apt-get update && apt-get install -y nginx iproute2 iputils-ping && rm -rf /var/lib/apt/lists/*
+COPY dmz_web.sh /dmz/dmz_web.sh
+RUN chmod +x /dmz/dmz_web.sh
